@@ -1,0 +1,363 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+ 
+<html>
+<head>
+<title>Skillifier!</title>
+
+<link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/cupertino/jquery-ui.css" rel="Stylesheet" />	
+<style type="text/css">
+
+	body{ font: 90% "Trebuchet MS", sans-serif; margin: 20px;}
+	td{padding:5px;}
+	tr{border: 1px solid black;}
+	.skill_active{color: red; font-weight:bold;}
+	table {border-collapse:collapse;}
+</style>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+<script type="text/javascript" src="../js/api.js"></script>
+<script type="text/javascript" src="../js/jquery.iecors.js"></script>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-26396490-1']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+<script type="text/javascript" language="javascript">
+
+
+
+var access_token = null;
+
+var special_skills = {
+	"betterlearning_1":{time_multiplier:0.98, free_skill_count: 21},
+	"betterlearning_2":{time_multiplier:0.95, free_skill_count: 24},
+	"betterlearning_3":{time_multiplier:0.92, free_skill_count: 28},
+	"betterlearning_4":{time_multiplier:0.88, free_skill_count: 32},
+	"betterlearning_5":{time_multiplier:0.80, free_skill_count: 37},
+};
+
+var invalid_skills = {
+};
+
+var priority_list = {};
+var skill_list = null;
+var player_skill_list = null;
+var learning_skill_list = null;
+
+function update_skill_order() {
+
+	if(skill_list == null) return;
+	var order = [];
+	var prereq_queue = [];
+	var time_multiplier = 1.0;
+	var free_skill_count = 20;
+	var skill_count = 0;
+	
+	var learned_list = [];
+	
+	for(var bad_id in invalid_skills) {
+		learned_list[bad_id] = 1;
+	}
+	
+	if(player_skill_list != null) {
+		learned_text_list = []
+		for(var learned_id in player_skill_list) {
+			learned_list[learned_id] = 1;
+			learned_text_list.unshift(player_skill_list[learned_id].name);
+			if(learned_id in special_skills) {
+				if(time_multiplier > special_skills[learned_id].time_multiplier) {
+					time_multiplier = special_skills[learned_id].time_multiplier;
+					free_skill_count = special_skills[learned_id].free_skill_count;
+				}
+			} 
+			//else {
+				skill_count++;
+			//}
+		}
+		$("#learned").html("You've already learned "+learned_text_list.length+" skills: "+learned_text_list.join(", ")+"<br><br>");
+	} else {
+		$("#learned").html("No skills learned!");
+	}
+	
+	
+	var cur_skill = null; 
+	while(learned_list.length != skill_list.length) {
+		cur_skill = {total_time:0, class_tsid:"invalid"};
+		for(var skill_id in learning_skill_list) {
+			if(skill_id in learned_list) continue;
+			if(skill_id in special_skills) {
+				if(!(cur_skill.class_tsid in special_skills)) {
+					/* new skill is special, old one isn't, take new one */
+					cur_skill = skill_list[skill_id];
+				} else {
+					if(skill_list[skill_id].total_time > cur_skill.total_time) {
+						/* Both skills are special, but this one takes longer, take it */
+						cur_skill = skill_list[skill_id];
+					}
+				}
+			} else {
+				/* new skill is not special */
+				if(cur_skill.class_tsid in special_skills) {
+					/* Old skill was, skip this */
+					continue;
+				}
+				if(skill_list[skill_id].total_time > cur_skill.total_time) {
+					/* Both skills are NOT special, but this one takes longer, take it */
+					cur_skill = skill_list[skill_id];
+				}
+			}			
+		}
+		if(cur_skill.class_tsid != "invalid") {
+			prereq_queue.unshift(cur_skill.class_tsid);
+		} else {
+			/* Check the priority list */
+			for(var skill_id in priority_list) {
+				if(skill_id in learned_list) continue;
+				if(skill_id in special_skills) {
+					if(!(cur_skill.class_tsid in special_skills)) {
+						/* new skill is special, old one isn't, take new one */
+						cur_skill = skill_list[skill_id];
+					} else {
+						if(skill_list[skill_id].total_time > cur_skill.total_time) {
+							/* Both skills are special, but this one takes longer, take it */
+							cur_skill = skill_list[skill_id];
+						}
+					}
+				} else {
+					/* new skill is not special */
+					if(cur_skill.class_tsid in special_skills) {
+						/* Old skill was, skip this */
+						continue;
+					}
+					if(skill_list[skill_id].total_time > cur_skill.total_time) {
+						/* Both skills are NOT special, but this one takes longer, take it */
+						cur_skill = skill_list[skill_id];
+					}
+				}
+			}
+		}
+		if(cur_skill.class_tsid != "invalid") {
+			prereq_queue.unshift(cur_skill.class_tsid);
+		} else {
+			/* Pick the highest cost unlearned skill */
+			for(var skill_id in skill_list) {
+				if(skill_id in learned_list) continue;
+				if(skill_list[skill_id].total_time > cur_skill.total_time) {
+					cur_skill = skill_list[skill_id];
+				}
+			}
+			if(!("name" in cur_skill)) 
+				break;
+			prereq_queue.unshift(cur_skill.class_tsid);
+		}
+		
+		var local_order = [];
+		/* find all the prereqs to this skill */
+		while(prereq_queue.length != 0) {
+			cur_skill_name = prereq_queue.shift();
+			if(cur_skill_name == null) continue;
+			if(cur_skill_name in learned_list) continue;
+			cur_skill = skill_list[cur_skill_name];
+			local_order.push(cur_skill);
+			//learned_list[cur_skill_name] = 1;
+			if((cur_skill.required_skills.length) != 0)
+			{
+				for(var skill_id in cur_skill.required_skills) {
+					if(skill_id == null) continue;
+					prereq_queue.unshift(cur_skill.required_skills[skill_id]);
+				}
+			}
+		}
+		var reverse_local_order = local_order.reverse();
+		for(var i = 0; i<local_order.length; i++) {
+			if(reverse_local_order[i].class_tsid in learned_list) {
+				delete reverse_local_order[i];
+				continue;
+			}
+			learned_list[reverse_local_order[i].class_tsid] = 1;
+			
+		}
+		order = order.concat(reverse_local_order);
+	}
+
+	
+	ordertext = "";
+	
+	var overall_time = 0;
+	
+	while(order.length != 0) {
+		var cur_skill = order.shift();
+		if(!cur_skill || cur_skill == null || cur_skill == undefined) continue;
+		var penalty = 1.0;
+		var skill_css_class = "skill_normal";
+		if(skill_count > free_skill_count) {
+			//penalty = 1.0 + (0.03*(skill_count - free_skill_count));
+			penalty = Math.pow(1.03, (skill_count-free_skill_count));
+		}
+		var cur_time = (cur_skill.total_time * time_multiplier * penalty);
+		if(learning_skill_list && (cur_skill.class_tsid in learning_skill_list)) {
+			cur_time = learning_skill_list[cur_skill.class_tsid].time_remaining;
+			skill_css_class = "skill_active";
+		}
+		var modifier = penalty*time_multiplier*100;
+		var priority_text = "<a href=\"#\" class=\"lopriority\" id=\""+cur_skill.class_tsid+"\"><span class=\"ui-icon ui-icon-plusthick\"></span></a> ";
+		if(cur_skill.class_tsid in priority_list) {
+			priority_text = "<a href=\"#\" class=\"hipriority\" id=\""+cur_skill.class_tsid+"\"><span class=\"ui-icon ui-icon-minusthick\"></span></a> ";
+		}
+		overall_time = overall_time + cur_time;
+		ordertext = ordertext + "<tr class=\""+skill_css_class+"\"><td><img height=\"50%\" src=\""+cur_skill.icon_44+"\"></td><td > "+priority_text +"</td><td><a target=\"blank\" href=\"http://www.glitch.com/"+cur_skill.url+"\">"+cur_skill.name +"</a></td><td>"+secondsToString(cur_skill.total_time)+"</td><td>"+secondsToString(cur_time)+"</td><td>"+secondsToString(overall_time)+"</td><td>"+modifier.toFixed(1)+"%</td></tr>";
+		//if(!(cur_skill.class_tsid in special_skills)) {
+			skill_count = skill_count + 1;
+		//}		
+		if(cur_skill.class_tsid in special_skills) {
+			free_skill_count = special_skills[cur_skill.class_tsid].free_skill_count;
+			time_multiplier = special_skills[cur_skill.class_tsid].time_multiplier;
+		}
+	}
+	//ordertext += "<tr><td colspan=6>Total time remaining: "+secondsToString(overall_time)+"</td></tr>";
+	$("#order").html("<table><tr><td></td><td>Pri?</td><td>Name</td><td>Base Learning Time</td><td>Adjusted Learning Time</td><td>Cumulative Time</td><td>Penalty</td></tr>"+ordertext+"</table>");
+}
+
+function load_all_skills_success(json) {
+	$("#dialog").dialog('close');
+	if(json.ok != 1) {
+		alert("Got a response, but it was bad!");
+		return;
+	}
+	skill_list = json.items;
+	
+	update_skill_order();
+	load_player_skills();
+}
+
+
+function load_player_skills_success(json) {
+	$("#dialog").dialog('close');
+	if(json.ok != 1) {
+		alert("Got a response, but it was bad!");
+		return;
+	}
+	player_skill_list = json.skills;
+	
+	update_skill_order();
+	load_learning_skills();
+
+}
+
+function load_learning_skills_success(json) {
+	$("#dialog").dialog('close');
+	if(json.ok != 1) {
+		alert("Got a response, but it was bad!");
+		return;
+	}
+	learning_skill_list = json.learning;	
+	update_skill_order();
+}
+
+
+function load_error(request, status, error) {
+	$("#dialog").dialog('close');
+	alert("Can't contact the glitch server!");
+}
+
+
+function load_all_skills() {
+	if(access_token == null) return;
+	$("#dialog").dialog('open');
+	glitch_api_make_call(access_token, "skills.listAll?per_page=1000", load_all_skills_success, load_error);
+}
+
+function load_player_skills() {
+	if(access_token == null) return;
+	$("#dialog").dialog('open');
+	glitch_api_make_call(access_token, "skills.listLearned", load_player_skills_success, load_error);
+}
+
+
+
+function load_learning_skills() {
+	if(access_token == null) return;
+	$("#dialog").dialog('open');
+	glitch_api_make_call(access_token, "skills.listLearning", load_learning_skills_success, load_error);
+}
+
+function handle_priority_click() {
+	//alert($(this).attr("id"));
+	var clicked_id = $(this).attr("id")
+	if(clicked_id in priority_list){
+		delete priority_list[clicked_id];
+	} else {
+		priority_list[clicked_id] = 1;
+	}
+	update_skill_order();
+	return false;
+}
+
+$(document).ready(function() {
+	$(".lopriority").live("click", handle_priority_click);
+	$(".hipriority").live("click", handle_priority_click);
+
+	
+	$("#dialog").dialog({modal:true,autoOpen:false});
+	access_token = glitch_api_get_access_token();
+	if(access_token) {
+		load_all_skills();
+		$("#refresh").html("<a href=\"#\" id=\"player_skill_refresh\">Refresh Learned Skills</a>  <a href=\"#\" id=\"player_skill_clear\">Clear Learned Skills</a><br><br>");
+		$("#player_skill_refresh").button();
+		$("#player_skill_clear").button();
+		$("#player_skill_refresh").click(function() {
+			load_player_skills();
+			return false;
+		});
+		$("#player_skill_clear").click(function() {
+			player_skill_list = null;
+			learning_skill_list = null;
+			update_skill_order();
+			return false;
+		});
+	
+	} else {
+		alert("Access code is missing!");
+	}
+});
+</script>
+
+</head>
+<body>
+<h1>Skillifier!</h1>
+
+
+<div id="dialog" title="Please wait...">
+	<p>Please wait while we contact the glitch servers...</p>
+</div>
+<h2>About</h2>
+<p>This tool examines the current skill chart and the skills you've learned in order to suggest an optimal skill learning
+order.  The goal of this tool is to allow you to make informed decisions about skill 
+learning and learning times.  It uses a 'greedy' algorithm to search and prioritize skills that 
+take longer to learn.  It will decide what 
+skill comes next in the following order:</p>
+<ol>
+<li>Skills you've started - these count against your "number of skills learned" count so it's not a good idea to start
+and then pause a bunch of skills</li>
+<li>Skills you've prioritized (by pressing the 'plus' icon next to them), with Better Learning levels first, then in an order that learns the longest skills first.</li>
+<li>All other skills, in order of how long it takes to learn them.</li>
+</ol>
+<p>The more skills you know, the larger the penalty is on learning new skills.  Levels of Better Learning combat this to an extent, as described in their encylopedia entries.</p>
+
+<p>I'd also like to note that this will, by default, attempt (it might fail!) to create a time-optimal skill order.  <b>You probably shouldn't follow it 
+blindly.</b>  Your character would be horribly imbalanced!  Let your own priorities effect how you choose your skills, and remember that this isn't a 
+race; it's a game!  Enjoy it as more than an optimization problem :)</p>
+<h2>What You Know</h2>
+<div id="learned"></div>
+<div id="refresh"></div>
+<h2>What You Have Left</h2>
+<div id=order>
+</div>
+<div id="pagefooter"></div>
+</body>
+</html>

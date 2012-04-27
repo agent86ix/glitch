@@ -1,0 +1,531 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+ 
+<html>
+<head>
+<title>FavorSaver!</title>
+
+<link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/cupertino/jquery-ui.css" rel="Stylesheet" />	
+<style type="text/css">
+
+	body{ font: 90% "Trebuchet MS", sans-serif; margin: 20px;}
+	td{padding:10px;}
+	th{padding:10px;}
+	tr{border: 1px solid black;}
+	.itemname{width:250px; text-align:left;}
+	.icon-box {margin:2px; position: relative; padding: 4px 0; float:left;}
+	span.ui-icon { float:left; margin: 0 4px;}
+	table {border-collapse:collapse;}
+	.subslot {display:none;}
+	.inventory_empty {margin:8px; position: relative; padding: 4px 0; float:left; text-align:center;}
+	.powder_disabled{font-weight:bold; color:red;}
+</style>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+<script type="text/javascript" src="../js/api.js"></script>
+<script type="text/javascript" src="../js/jquery.iecors.js"></script>
+<script type="text/javascript" src="../js/jquery.cookies.min.js"></script>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-26396490-1']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+<script type="text/javascript" language="javascript">
+var old_slot_id = null;
+var donation_array = {};
+var priority_array = [];
+var qty_array = {};
+var inventory = {};
+
+function expand_inventory(e) {
+	var slot_id = $(this).attr("slot_id");
+	if(old_slot_id != null) {
+		$("#subslot_"+old_slot_id).hide('fast', function(){$("#subslot_"+slot_id).show('fast');});
+	} else {
+		$("#subslot_"+slot_id).show('fast');
+	}
+	old_slot_id = slot_id;
+
+}
+
+function update_donation_qty() {
+	var favor_target = get_num("#favortarget");
+	var ehsp = get_num("#ehsp");
+	if(ehsp < 0) ehsp = 0;
+	var fhsp = get_num("#fhsp");
+	if(fhsp < 0) fhsp = 0;
+	var cur_favor = 0;
+	for(var i=0; i<priority_array.length; i++) {
+		var class_tsid = priority_array[i];
+		var item_favor = 0;
+		if(class_tsid == null || class_tsid == undefined) continue;
+		donation_array[class_tsid].donate_qty = 0;
+		donation_array[class_tsid].ehsp_donate_qty = 0;
+		donation_array[class_tsid].fhsp_donate_qty = 0;
+		donation_array[class_tsid].favor = 0;
+		if(cur_favor == favor_target || !(class_tsid in qty_array)) continue;
+
+		var qty = qty_array[class_tsid];
+		var user_qty_type = donation_array[class_tsid].qty_type;
+		var user_qty = donation_array[class_tsid].user_donate_qty;
+		
+		if(user_qty_type == 1) {
+			/* Max */
+			if(qty > user_qty) {
+				qty = user_qty;
+			}
+		} else if(user_qty_type == 2) {
+			qty -= user_qty;
+		}
+
+		if(qty <= 0) continue;
+		var favor_value = 0;	
+		if(class_tsid in inventory) {
+			favor_value = inventory[class_tsid].item_def.base_cost/10;
+		}
+		if(favor_value == 0) continue;
+		if(ehsp > 0 && donation_array[class_tsid].allow_ehsp) {
+			var required_qty = Math.floor((favor_target - cur_favor)/(favor_value*3));
+			if(required_qty != 0) ehsp--;
+			if(qty < required_qty) {
+				cur_favor += favor_value*3*qty;
+				donation_array[class_tsid].favor += favor_value*3*qty;
+				donation_array[class_tsid].ehsp_donate_qty = qty;
+				qty = 0;
+			} else {
+				cur_favor += favor_value*3*required_qty;
+				donation_array[class_tsid].favor += favor_value*3*required_qty;
+				donation_array[class_tsid].ehsp_donate_qty = required_qty;
+				qty -= required_qty;
+			}
+		}
+		if(cur_favor == favor_target) continue;
+		if(qty > 0 && fhsp > 0 && donation_array[class_tsid].allow_fhsp) {
+			var required_qty = Math.floor((favor_target - cur_favor)/(favor_value*2));
+			if(required_qty != 0) fhsp--;
+			if(qty < required_qty) {
+				cur_favor += favor_value*2*qty;
+				donation_array[class_tsid].favor += favor_value*2*qty;
+				donation_array[class_tsid].fhsp_donate_qty = qty;
+				qty = 0;
+			} else {
+				cur_favor += favor_value*2*required_qty;
+				donation_array[class_tsid].favor += favor_value*2*required_qty;
+				donation_array[class_tsid].fhsp_donate_qty = required_qty;
+				qty -= required_qty;
+			}		
+		}
+		if(qty > 0) {
+			var required_qty = Math.floor((favor_target - cur_favor)/(favor_value));
+			
+			if(qty < required_qty) {
+				cur_favor += favor_value*qty;
+				donation_array[class_tsid].favor += favor_value*qty;
+				donation_array[class_tsid].donate_qty = qty;
+				qty = 0;
+			} else {
+				cur_favor += favor_value*required_qty;
+				donation_array[class_tsid].favor += favor_value*required_qty;
+				donation_array[class_tsid].donate_qty = required_qty;
+				qty -= required_qty;
+			}		
+		}
+	}
+	$("#favorout").html(cur_favor.toFixed(2));
+	refresh_donation_table();
+}
+
+function click_inventory(e) {
+	var class_tsid = $(this).attr("tsid");
+	if(class_tsid in donation_array) return;
+	if(!(class_tsid in qty_array)) return;
+	donation_array[class_tsid] = {class_tsid:class_tsid, "user_donate_qty":qty_array[class_tsid], "qty_type":0,
+		"allow_ehsp":1, "allow_fhsp":1, "favor":0,"name":inventory[class_tsid].item_def.name_plural,
+		"donate_qty":0, "ehsp_donate_qty":0, "fhsp_donate_qty":0};
+	priority_array.push(class_tsid);
+	update_donation_qty();
+}
+
+function remove_donation(e) {
+	var class_tsid = $(this).attr("tsid");
+	if(!(class_tsid in donation_array)) return;
+	delete donation_array[class_tsid];
+	
+	var new_priority_array = [];
+	for(var i =0; i<priority_array.length; i++) {
+		if(priority_array[i] != class_tsid) {
+			new_priority_array.push(priority_array[i]);
+		}
+	}
+	priority_array = new_priority_array;
+	update_donation_qty();
+//	refresh_donation_table();
+}
+
+function update_qty_type(e) {
+	var class_tsid = $(this).attr("tsid");
+	if(!(class_tsid in donation_array)) return;
+	var qty_type = $(this).val();
+	
+	donation_array[class_tsid].qty_type = qty_type;
+	if(qty_type == 0) {
+		$(".userqtyinput [tsid]=\""+class_tsid+"\"").hide();
+	} else {
+		$(".userqtyinput [tsid]=\""+class_tsid+"\"").show();
+	}
+	update_donation_qty();
+}
+
+function refresh_donation_table() {
+	//$("#donations tbody").hide('fast');
+	var donation_text = "";
+	for(var i = 0; i<priority_array.length; i++) {
+		if(priority_array[i] == null || priority_array[i] == undefined || !priority_array[i]) continue;
+		var donation_item = donation_array[priority_array[i]];
+		var qty = 0;
+		if(donation_item.class_tsid in inventory) {
+			donation_item.name = inventory[donation_item.class_tsid].item_def.name_plural;
+		}
+		if(donation_item.class_tsid in qty_array) {
+			qty = qty_array[donation_item.class_tsid];
+		}
+		var ehsp_class = "";
+		if(!donation_item.allow_ehsp) ehsp_class = "powder_disabled";
+		var fhsp_class = "";
+		if(!donation_item.allow_fhsp) fhsp_class = "powder_disabled";
+		var qtymax_selected = "";
+		var qtyall_selected = "";
+		var qtysave_selected = "";
+		var qty_input_display = "";
+		if(!("user_donate_qty" in donation_item)) {
+			donation_item["user_donate_qty"] = qty;
+		}
+		if(!("qty_type" in donation_item)) {
+			donation_item["qty_type"] = 1;
+		}
+		if(donation_item.qty_type == 1) {
+			qtymax_selected = " selected=\"selected\" ";
+		} else if(donation_item.qty_type == 0) {
+			qty_input_display = " style=\"display:none;\" ";
+			qtyall_selected = " selected=\"selected\" ";
+		} else if(donation_item.qty_type == 2) {
+			qtysave_selected = " selected=\"selected\" ";
+		}
+		
+		
+		donation_text += "<tr><td><span class=\"ui-icon ui-icon-arrowthick-2-n-s\"></span></td><td><span tsid=\""+donation_item.class_tsid+"\" class=\"removebutton ui-icon ui-icon-closethick\"></span></td>"
+			+"<td class=itemname tsid=\""+donation_item.class_tsid+"\">"+donation_item.name+"</td>"+
+			"<td class=owned>"+qty+"</td><td><input size=4 class=userqtyinput type=text "+qty_input_display+" tsid=\""+donation_item.class_tsid+"\" value=\""+donation_item.user_donate_qty+"\">"+
+			"<select class=qtytypeselect tsid=\""+donation_item.class_tsid+"\"><option value=0 "+qtyall_selected+">All</option>"+
+			"<option value=1 "+qtymax_selected+">Max</option><option value=2 "+qtysave_selected+">Save</option></select></td>"+
+			"<td class=\"ehsp_donate_qty "+ehsp_class+"\" tsid=\""+donation_item.class_tsid+"\">"+donation_item.ehsp_donate_qty+"</td>"+
+			"<td class=\"fhsp_donate_qty "+fhsp_class+"\" tsid=\""+donation_item.class_tsid+"\">"+donation_item.fhsp_donate_qty+"</td>"+
+			"<td class=donate_qty>"+donation_item.donate_qty+"</td><td>"+donation_item.favor.toFixed(2)+"</td></tr>";
+	}
+	$("#donations tbody").html(donation_text);
+	//$("#donations tbody").show('fast');
+	
+	$.cookies.set('favor_donation_array', donation_array);
+	$.cookies.set('favor_priority_array', priority_array);
+	$.cookies.set('favor_misc_settings', {ehsp:$("#ehsp").val(), fhsp:$("#fhsp").val(), favortarget:$("#favortarget").val()});	
+}
+
+function load_inventory_success(json) {
+	$("#dialog").dialog('close');
+	
+	if(json.ok != 1) {
+		alert("Got a response, but it was bad!");
+		return;
+	}
+	var main_inventory = "";
+	var subslot_array = [];
+	inventory = {};
+	qty_array = {};
+	
+	for(var slot_id in json.contents) {
+		var cur_item = json.contents[slot_id];
+		if(cur_item == null) {
+			main_inventory += "<td><span class=\"inventory_empty ui-state-default ui-corner-all\"><span class=\"ui-icon ui-icon-cancel\"></span></span></td>";
+			continue;
+		}
+		
+		if(!(cur_item.class_tsid in inventory)) {
+			inventory[cur_item.class_tsid] = cur_item;
+		}
+		
+		if("contents" in cur_item) {
+			main_inventory += "<td><img class=\"ui-state-default ui-corner-all icon_box inventory_container\" slot_id=\""+slot_id+"\" src=\""+cur_item.item_def.iconic_url+"\"></td>";
+			subslot_inventory = "<tr class=subslot id=\"subslot_"+slot_id+"\">";
+			var slot_count = 0;
+			for(var subslot_id in cur_item.contents) {
+				slot_count++;
+				var cur_subitem = cur_item.contents[subslot_id];
+				if(cur_subitem == null) {
+					subslot_inventory += "<td><span class=\"inventory_empty ui-state-default ui-corner-all\"><span class=\"ui-icon ui-icon-cancel\"></span></span></td>";
+					continue;
+				}
+				if(!(cur_subitem.class_tsid in inventory)) {
+					inventory[cur_subitem.class_tsid] = cur_subitem;
+				}
+				subslot_inventory += "<td><img class=\"ui-state-default ui-corner-all icon_box inventory_item\" tsid=\""+cur_subitem.class_tsid+"\" id=\"subslot_"+slot_id+"_"+subslot_id+"\" src=\""+cur_subitem.item_def.iconic_url+"\"></td>";
+				if(cur_subitem.class_tsid in qty_array) {
+					qty_array[cur_subitem.class_tsid] += cur_subitem.count;
+				} else {
+					qty_array[cur_subitem.class_tsid] = cur_subitem.count;
+				}
+			}
+			if(slot_count != 16) {
+				var padding_cells = 16-slot_count;
+				subslot_inventory += "<td colspan=\""+padding_cells+"\">&nbsp;</td>";
+			}
+			subslot_array.push(subslot_inventory+"</tr>");
+		} else {
+			main_inventory += "<td><img class=\"ui-state-default ui-corner-all icon_box inventory_item\" tsid=\""+cur_item.class_tsid+"\" id=\"main_"+slot_id+"\" src=\""+cur_item.item_def.iconic_url+"\"></td>";
+			if(cur_item.class_tsid in qty_array) {
+				qty_array[cur_item.class_tsid] += cur_item.count;
+			} else {
+				qty_array[cur_item.class_tsid] = cur_item.count;
+			}
+		}
+	}
+	$("#inventory").html(subslot_array.join("")+"<tr>"+main_inventory+"</tr>");
+	update_donation_qty();
+}
+
+function load_inventory_error(request, status, error) {
+	$("#dialog").dialog('close');
+	alert("Can't contact the glitch server!");
+}
+
+function load_inventory() {
+	if(access_token == null) return;
+	$("#dialog").dialog('open');
+	glitch_api_make_call(access_token, "players.inventory?defs=1", load_inventory_success, load_inventory_error);
+}
+
+function donation_sort_update() {
+	priority_array = [];
+	$("#donations tbody tr").each(function(i, tr) {
+		var class_tsid = $("td.itemname", tr).attr("tsid");
+		var owned = $("td.owned", tr).text();
+		var max = $("td.max input", tr).val();
+		priority_array.push(class_tsid);
+	});
+	//recompute favor
+	update_donation_qty();
+}
+
+function toggle_ehsp() {
+	var class_tsid = $(this).attr("tsid");
+	if(!(class_tsid in donation_array)) return;
+	if(donation_array[class_tsid].allow_ehsp) donation_array[class_tsid].allow_ehsp = 0
+	else donation_array[class_tsid].allow_ehsp = 1;
+
+	update_donation_qty();	
+}
+
+function toggle_fhsp() {
+	var class_tsid = $(this).attr("tsid");
+	if(!(class_tsid in donation_array)) return;
+	if(donation_array[class_tsid].allow_fhsp) donation_array[class_tsid].allow_fhsp = 0
+	else donation_array[class_tsid].allow_fhsp = 1;
+
+	update_donation_qty();	
+}
+
+
+function update_user_qty() {
+	var class_tsid = $(this).attr("tsid");
+	if(!(class_tsid in donation_array)) return; 
+	donation_array[class_tsid].user_donate_qty = get_num(this);
+	update_donation_qty();
+}
+
+$(document).ready(function() {
+	
+	try {
+		donation_array = $.cookies.get('favor_donation_array');
+		if(donation_array == null) donation_array = {};
+		priority_array = $.cookies.get('favor_priority_array');
+		if(priority_array == null) priority_array = [];
+		var misc_settings = $.cookies.get('favor_misc_settings');
+		if(misc_settings) {
+			if('favortarget' in misc_settings)
+				$("#favortarget").val(misc_settings.favortarget);
+			if('ehsp' in misc_settings) 
+				$("#ehsp").val(misc_settings.ehsp);
+			if('fhsp' in misc_settings) 
+				$("#fhsp").val(misc_settings.fhsp);
+		}
+	} catch(err) {
+		donation_array = {};
+		priority_array = [];
+	}
+	
+	$("#cookiedel").click(function (e) {
+		$.cookies.del('favor_misc_settings');
+		$.cookies.del('favor_donation_array');
+		$.cookies.del('favor_priority_array');
+		e.preventDefault();
+	});
+	
+	$("#dialog").dialog({modal:true,autoOpen:false});
+	$("#inventory_refresh").click(load_inventory);
+
+	$(".inventory_container").live("click", expand_inventory);
+	$(".inventory_item").live("click", click_inventory);
+	$(".ehsp_donate_qty").live("click", toggle_ehsp);
+	$(".fhsp_donate_qty").live("click", toggle_fhsp);
+	$(".removebutton").live("click", remove_donation);
+	$(".userqtyinput").live("change", update_user_qty);
+	$(".qtytypeselect").live("change", update_qty_type);
+
+	$("#favortarget").change(update_donation_qty);
+	$("#ehsp").change(update_donation_qty);
+	$("#fhsp").change(update_donation_qty);
+
+	access_token = glitch_api_get_access_token();
+	if(access_token) {
+		load_inventory();
+	} else {
+		alert("Your access token is missing!  Go back to the main menu and try again.");
+	}
+	
+	$("#donations tbody").sortable({
+		cancel: ':input,option',
+		helper: function(e, tr) {
+			var $originals = tr.children();
+			var $helper = tr.clone();
+			$helper.children().each(function(index)
+			{
+				// Set helper cell sizes to match the original sizes
+				$(this).width($originals.eq(index).width())
+			});
+			return $helper;
+		},
+		update: donation_sort_update,
+		revert: 50,
+	});
+	$("#helptabs").tabs();
+});
+
+</script>
+</head>
+<body>
+<h1>FavorSaver!</h1>
+<noscript>
+<p style="color:red;">This page requires javascript, but you have it turned off :(</p>
+</noscript>
+
+<span id="inventory_refresh" style="float:left;"><span class="icon-box ui-state-default ui-corner-all"><span class="ui-icon ui-icon-refresh"></span></span></span><h2>Your Inventory</h2>
+
+<table id="inventory">
+</table>
+<h2>Donation Amount</h2>
+<p>Favor to generate: <input type=text id=favortarget size=4></p>
+<p>Shrine Powders to use: Extremely Hallowed: <input type=text id=ehsp size=2> Fairly Hallowed: <input type=text id=fhsp size=2></p>
+<h2>Items for Donation</h2>
+<table id="donations">
+<thead>
+<tr><th></th><th></th><th class=itemname>Item</th><th>You Have</th><th>Max/Save</th><th>EHSP Qty to Donate</th><th>FHSP Qty to Donate</th><th>Qty to Donate</th><th>Favor Generated</th></tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<p><b>Total favor generated:</b><span id=favorout></span></p>
+<div id="output"></div>
+<p>Be warned!  Sometimes random things happen, and many other in-game events generate favor (such as leveling up!) so you might run over if you're not
+being extra careful (or even if you are!)</p>
+
+
+<div id="dialog" title="Please wait...">
+	<p>Please wait while we contact the glitch servers...</p>
+</div>
+
+<div id="helptabs">
+<ul>
+<li><a href="#helptabs-1">Using this tool</a></li>
+<li><a href="#helptabs-2">How donations work</a></li>
+</ul>
+<div id="helptabs-1">
+<b>Usage Tips!</b>
+<ul>
+<li>Click on items from "Your Inventory" to add them to the donation table.</li>
+<li>If your inventory is out of date, use the blue refresh button to refresh it from the Glitch servers.</li>
+<li>Enter a favor amount to try and generate, along with the amount of powder 'charges' you want to use.</li>
+<li>Drag the items in the donation table around to select which will be used first.</li>
+<li>Click the "x" icon to remove an item from the donation table.</li>
+<li>You can set a donation limits in the Max/Save column:
+	<ul>
+	<li>"All" means DONATE ALL THE THINGS!
+	<li>"Max" quantity means donate no more than the amount you specify. (ie, "I don't want to donate more than 500 meat today")
+	<li>"Save" means leave this amount behind.  (ie, "I want to save 1 Fancy Pick so that I can mine later, but I want to donate the rest")
+	</ul>
+</li>
+<li>If you want to avoid using a powder on an item, click the number under "EHSP Qty" or "FHSP Qty" to turn it red and make it zero.  Click the number
+ again if you want to allow that powder to be used on that item again.</li>
+<li>Watch the number at the bottom of the table to see how much favor you're generating!</li>
+<li>When you have your favor and donation amounts worked out, go donate the quantities the tool shows to get the favor you want!</li>
+</ul>
+</div>
+<div id="helptabs-2">
+<b>About Shrine Donations</b>
+<p>Shrines give you Favor, Mood, and XP in return for your items.  What follows is an introduction and some strategy.  
+For more information, consult <a href="http://www.glitch.com/forum/general/9667/118064/">this thread</a> on the forums.</p>
+<b>Favor</b>
+<p>Favor is calculated based on the value of your item in currants.  Every item generates 10% of its value in Favor when donated.  
+Shrine powders can double (Fairly Hallowed) or triple (Extremely Hallowed) a single donation's Favor value.  
+You can make them with Intermediate Admixing, along with a generous helping of ore mining and grinding.  </p>
+
+<p>There is a daily Favor maximum for each giant.  This maximum is the amount it would take you to max out the Giant's favor bar from 0.  </p>
+<p>The Favor cap count resets every Glitch day.  This effectively limits you to one emblem per Giant per Glitch day.</P>
+
+<b>Experience</b>
+<p>XP is calculated based on your current Mood before the donation, and the value of the item in currants.  If your current mood is 
+over 90% of the maximum mood, you will gain 24% of the value of the item in XP when you donate.  This mood level is indicated by 
+a little green smiley face that is winking.  If your mood level is lower than 90%, you will lose 2% of the potential XP from the 
+donation for every mood level you are below it.  The little mood indicator will grow increasingly red, and more unhappy as this happens.</p>
+
+<p>There is a cap to the amount of XP you can gain from donations, which is computed based on your current level.
+It is counted across all shrines.  It resets every day, just like the Favor caps do.  
+Your XP cap is 25% of the total XP it takes to get to the next level at level 1.  It goes down by 0.5% every level to a minimum 
+of 10% at level 31.  This means if your only source of XP is shrine donations, you could level up in 10 Glitch days (or less at lower 
+levels).</p>
+
+<b>Emblems</b>
+<p>Shrines award emblems each time you max their favor bars.  Emblems can give you small XP, Mood, and Energy bonuses once per day per 
+emblem type.  They can also be combined into Icons if you have 11 of the same type of emblem.  If your current donation exceeds the 
+amount needed to get an emblem, you will lose any over this limit.</p>
+
+<p>Earning an emblem increases the Favor required to earn another emblem by 100.  Note that since this is used to calculate your 
+daily Giant Favor cap, getting an emblem also increases your Favor cap for a giant by 100.</p>
+
+<b>Learning time reduction</b>
+<p>Favor points and emblems can be spent to reduce the learning time of your current skill.  If you are learning at normal speed, 
+the maximum time you can reduce is half the remaining time to learn the skill.  Favor points from a skill's primary Giant count 
+as a 10 second reduction.  Secondary giants count for 7 seconds, and all other giants count for 5.  The primary and secondary giants 
+are listed on the skill's encyclopedia pages, among other locations.</p>
+
+<p>
+Emblems always count for 1000 favor points when used to reduce the learning time of a skill, regardless of how many points it took 
+to earn the emblem.  Earning emblems for Giants/skills you plan to learn soon is a good way to ensure you can maximize your skill 
+speed-up time.  However, you are usually better served by not earning emblems for the Giant/skill you are currently learning.
+</p>
+<p>Also note that as you approach the limit for speeding up a skill, shrines will only let you spend points until you've hit that 
+cap.  Emblems, however, will not warn you and they will always be used up, even if you couldn't benefit from a full 1000 Favor 
+points worth of speed up.</p>
+
+</div>
+</div>
+
+<p>This page sets a cookie in your browser to store the list of items you want to donate.  You can <a id="cookiedel" href="#">clear the cookie</a> if you want.  </p>
+<div id="pagefooter">
+</div>
+
+</body>
+</html>

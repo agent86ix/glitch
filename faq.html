@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>agent86's tools FAQ!</title>
+<style type="text/css">
+body{ font: 90% "Trebuchet MS", sans-serif; margin: 20px;}body{ font: 90% "Trebuchet MS", sans-serif; margin: 20px;}
+.onecol { padding: 10px; margin:5px; vertical-align:middle; width:600px; border: 1px solid black;}
+
+</style>
+<link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/cupertino/jquery-ui.css" rel="Stylesheet" />    
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+<script type="text/javascript" src="js/api.js"></script>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-26396490-1']);
+      _gaq.push(['_trackPageview']);
+(function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+<script type="text/javascript">
+
+$(document).ready(function () {
+	$(".toolbutton").button();
+});
+
+</script>
+</head>
+<body>
+
+<h1>agent86's tools for glitch - FAQ</h1>
+<div class="onecol">
+<ol >
+<li><b>What is this place?</b><br><br>
+This is a site I created for the purpose of hosting certain tools that I think Glitch players might have a use for.  
+You can feel free to use the tools here if you like them.
+<br><br>
+</li>
+<li><b>How did you make these tools?</b><br><br>
+These tools are written in 99.9% JavaScript, and use the jQuery library for most of their fancy-ness.  I access 
+the Glitch servers via the Glitch Developer API, which is free for all Glitch users.
+<br><br>
+</li>
+<li><b>What browsers do you support?</b><br><br>
+I support most major browsers, including Firefox, Chrome, Internet Explorer, and Safari.  Internet Explorer causes 
+the most issues for people, so if you've got IE you might consider an alternative browser.  Pretty much any version that is supported 
+by <a href="http://docs.jquery.com/Browser_compatibility">jQuery</a> and <a href="http://caniuse.com/cors">CORS</a> should be fine.  <br><br>
+</li>
+<li><b>Who is your host?</b><br><br>
+I use <a href="https://www.nearlyfreespeech.net/">NearlyFreeSpeech</a>.  They're an awesome company, go check them out!  I don't make anything for referring people, 
+I just like them and think they should stay in business. 
+<br><br>
+</li>
+<li><b>What's the future of your tools?</b><br><br>
+As new functionality is added to the API, I'll probably write tools that exploit it.  This site will probably remain up 
+for at least a few years at the current rate it's going.  I have no intention of removing it, even if I stop playing Glitch!
+<br><br>
+</li>
+<li><b>What's with the ads?</b><br><br>
+Although with NearlyFreeSpeech my hosting costs are minimal, it still does cost to run this site.  Sometimes people like 
+to financially support sites or people that do work they enjoy or utilize.  Ads are one way that users can financially support 
+something without having to pay money out of your own pocket.  I don't have ads on the tool pages themselves, and I have no 
+plans to do so at this time.  I'm not looking to profit from this, just perhaps break even with the hosting costs.
+<br><br>
+</li>
+<li><b>Why don't you open-source these tools?  (or Can I have the source?  Where can I get source?)</b><br><br>
+Since these tools are written in Javascript, all of the source is already on your computer, in your browser.  I've released 
+this under a Creative Commons license, which you can find at the bottom of each tool page.  One of the restrictions is that 
+you can't take my work and pass it off as your own.  You're also not allowed to make money off of it, and you have to share 
+anything you make under a similar license.  However, I'm not a lawyer so this is just my personal interpretation.
+<br><br>
+
+</li>
+<li><b>What data do you collect about my character, and how is it used/stored?</b><br><br>
+The way I've architected these tools, I never get any information about your character.  Seriously, I don't.  
+Your browser talks to the Glitch servers, and then the information from the Glitch servers goes straight to you.  
+Anything that happens in the browser window is private between you and Glitch.  I don't store it, track it, have access to it, 
+etc at any point in the process.  This isn't the 'standard' way of writing these kinds of tools, but I respect privacy so 
+I've done what I can to make sure that yours is respected.<br><br>
+I don't save the authorization token, so you have to authorize with the Glitch servers every time you load a tool.  It doesn't 
+really do anything, but you can feel free to <a href="http://www.glitch.com/apps/">revoke that authorization</a> if you wish.<br><br>
+I do use Google's tools to keep track of what actions and pages are most popular.  None of your personal data is sent by me.  
+However, If this bothers you, you may want to <a href="http://tools.google.com/dlpage/gaoptout">opt out</a> of Google Analytics.
+<br><br>
+
+</li>
+
+<li><b>Your code looks like crap.  You're a professional developer?</b><br><br>
+Yes, and yes. :)
+<br><br>
+... Oh, you wanted a longer answer?  I have limited time to invest in my tools, so I generally write them quick and dirty. 
+I feel much the same way about user interface.  If it works, I don't care if it's not pretty.   
+Most of the work I do for pay is of much higher quality and easier to maintain.  Don't judge me by what you see here, is 
+I guess what I'm trying to say. :)
+<br><br>
+
+</li>
+
+</ol>
+</div>
+<div id="pagefooter"></div>
+
+</body>
+</html>

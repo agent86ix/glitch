@@ -1,0 +1,434 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+ 
+<html>
+<head>
+<title>GrindOTron!</title>
+<style TYPE="text/css">
+.icon-box {margin:2px; position: relative; padding: 4px 0; float:right; vertical-align:middle;}
+span.ui-icon { float:left; margin: 0 4px;}
+body{ font: 90% "Trebuchet MS", sans-serif; margin: 20px;}
+
+input {
+	width: 60px;
+}
+.left3 {
+float: left;
+padding: 10px;
+vertical-align: top;
+}
+.middle3 {
+width: 250px;
+float: left;
+padding: 10px;
+vertical-align:top;
+}
+.right3 {
+float:left;
+padding: 10px;
+vertical-align: top;
+}
+
+.left2 {
+float: left;
+padding: 10px;
+vertical-align: top;
+}
+.right2 {
+float:left;
+padding: 10px;
+vertical-align: top;
+}
+
+.container {
+width:1000px;
+vertical-align: top;
+}
+
+.clear {
+clear:both;
+text-align:center;
+}
+
+</style>
+<link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/cupertino/jquery-ui.css" rel="Stylesheet" />	
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+<script type="text/javascript" src="../js/api.js"></script>
+<script type="text/javascript" src="../js/jquery.iecors.js"></script>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-26396490-1']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+<script type="text/javascript" language="javascript">
+
+var comp_arr = {
+abb:{name:"Abbasidose", class_tsid:"abbasidose", red_elm:4, grn_elm:2, blu_elm:6, spk_elm:0},
+alp:{name:"Alphose",class_tsid:"alphose",red_elm:3,grn_elm:5,blu_elm:7,spk_elm:0 },
+cos:{name:"Cosmox",class_tsid:"cosmox",red_elm:12,grn_elm:0,blu_elm:4,spk_elm:3	 },
+dia:{name:"Diabolic Acid",class_tsid:"diabolic_acid",red_elm:1,grn_elm:1,blu_elm:1,spk_elm:0},
+fri:{name:"Friendly Acid",class_tsid:"friendly_acid",red_elm:10,grn_elm:0,blu_elm:5,spk_elm:0},
+gre:{name:"Grendalinunin",class_tsid:"grendalinunin",red_elm:17,grn_elm:7,blu_elm:4,spk_elm:2	}, 
+gro:{name:"Groddlene",class_tsid:"groddlene",red_elm:6,grn_elm:3,blu_elm:0,spk_elm:0},	 
+hum:{name:"Humbabol",class_tsid:"humbabol",red_elm:0,grn_elm:0,blu_elm:1,spk_elm:5},	 
+ixi:{name:"Ixite",class_tsid:"ixite",red_elm:2,grn_elm:3,blu_elm:2,spk_elm:1},	 
+lem:{name:"Lemene",class_tsid:"lemene",red_elm:4,grn_elm:3,blu_elm:2,spk_elm:1},	 
+mab:{name:"Mabon",class_tsid:"mabon",red_elm:0,grn_elm:7,blu_elm:7,spk_elm:7},
+pot:{name:"Potoxin",class_tsid:"potoxin",red_elm:7,grn_elm:11,blu_elm:4,spk_elm:0},
+rub:{name:"Rubemycin",class_tsid:"rubemycin",red_elm:5,grn_elm:3,blu_elm:2,spk_elm:1},	 
+spr:{name:"Spriggase",class_tsid:"spriggase",red_elm:11,grn_elm:7,blu_elm:5,spk_elm:0},	 
+tii:{name:"Tiite",class_tsid:"tiite",red_elm:2,grn_elm:0,blu_elm:1,spk_elm:0}, 
+zil:{name:"Zillene",class_tsid:"zillene",red_elm:0,grn_elm:5,blu_elm:3,spk_elm:1}
+	
+};
+
+var powder_arr = {
+	fhs:{name:"Fairly Hallowed Shrine Powder",
+		comp:{zil:65, hum:55, mab:20}},
+		
+	ehs:{name:"Extremely Hallowed Shrine Powder", 
+		comp:{zil:175, hum:160, gro:40}},
+	ftd:{name:"Fertilidust",
+		comp:{hum:40, pot:20, cos:10}},
+	fdl:{name:"Fertilidust Lite",
+		comp:{hum:15, pot:10}},
+/*
+	jjss:{name:"Juju Shoo-Shoo Powder",
+		comp:{}},
+*/
+	nono:{name:"No-No Powder",
+		comp:{lem:4, cos:11}},
+	mfec:{name:"Powder of Mild Fecundity",
+		comp:{alp:40, rub:45}},
+	sfec:{name:"Powder of Startling Fecundity",
+		comp:{gre:60, rub:75, cos:50}},
+	snez:{name:"Sneezing Powder",
+		comp:{ixi:20, tii:65}},
+	spark:{name:"Sparkle Powder",
+		comp:{abb:30, spr:30}},	
+};
+
+var elm_arr = {
+	red_elm:{name:"Red Element", class_tsid:"element_red"},
+	grn_elm:{name:"Green Element", class_tsid:"element_green"},
+	blu_elm:{name:"Blue Element", class_tsid:"element_blue"},
+	spk_elm:{name:"Shiny Element", class_tsid:"element_shiny"},
+}
+
+var ore_arr = {
+	dul_ore:{name:"Dullite", class_tsid:"dullite",red_elm:5, grn_elm:8, blu_elm:0, spk_elm:0},
+	ber_ore:{name:"Beryl", class_tsid:"beryl", red_elm:20, grn_elm:2, blu_elm:4, spk_elm:0},
+	spk_ore:{name:"Sparkly", class_tsid:"sparkly", red_elm:5, grn_elm:1, blu_elm:4, spk_elm:6},
+};
+
+var access_token = null;
+
+
+
+function load_inventory_success(json) {
+	$("#dialog").dialog('close');
+	var inventory = {};
+	if(json.ok != 1) {
+		alert("Got a response, but it was bad!");
+		return;
+	}
+	
+	/* build the inventory array */
+	
+	for(var slot_id in json.contents) {
+		var slot_obj = json.contents[slot_id];
+		if(slot_obj == null || !("class_tsid" in slot_obj)) continue;
+		if("contents" in slot_obj) {
+			for(var sub_slot_id in slot_obj.contents) {
+				sub_slot_obj = slot_obj.contents[sub_slot_id];
+				if(sub_slot_obj == null || !("class_tsid" in sub_slot_obj)) continue;
+				if(sub_slot_obj.class_tsid in inventory) {
+					inventory[sub_slot_obj.class_tsid].count = inventory[sub_slot_obj.class_tsid].count + sub_slot_obj.count;
+				} else {
+					inventory[sub_slot_obj.class_tsid] = {count:sub_slot_obj.count};
+				}
+			}
+		} else {
+			if(slot_obj.class_tsid in inventory) {
+				inventory[slot_obj.class_tsid].count = inventory[slot_obj.class_tsid].count + slot_obj.count;
+			} else {
+				inventory[slot_obj.class_tsid] = {count:slot_obj.count};
+			}
+		}
+	}
+	
+	//alert("You have "+inventory["sparkly"].count+" sparkly ore!");
+	
+	for(var comp_key in comp_arr) {
+		var tsid = comp_arr[comp_key].class_tsid;
+		if(tsid in inventory) {
+			$("#prg_"+comp_key+"_c").val(inventory[tsid].count);
+		} else {
+			$("#prg_"+comp_key+"_c").val(0);
+		}
+	}
+	
+	for(var elm_key in elm_arr) {
+		var tsid = elm_arr[elm_key].class_tsid;
+		if(tsid in inventory) {
+			$("#prg_"+elm_key).val(inventory[tsid].count);
+		} else {
+			$("#prg_"+elm_key).val(0);
+		}
+	}
+	
+	for(var ore_key in ore_arr) {
+		var tsid = ore_arr[ore_key].class_tsid;
+		if(tsid in inventory) {
+			$("#"+ore_key).val(inventory[tsid].count);
+		} else {
+			$("#"+ore_key).val(0);
+		}
+	}
+}
+
+function load_inventory_error(request, status, error) {
+	$("#dialog").dialog('close');
+	alert("Can't contact the glitch server!");
+}
+
+
+function load_inventory() {
+	if(access_token == null) return;
+	$("#dialog").dialog('open');
+	glitch_api_make_call(access_token, "players.inventory", load_inventory_success, load_inventory_error);
+}
+
+
+$(document).ready(function() {
+
+	$("#dialog").dialog({modal:true,autoOpen:false});
+	$("#grind_button").button();
+	
+	/* Build the tables from the static arrays */
+	var prg_comp_table = "<tr>";
+	var pop_comp_table = "<tr>";
+	var new_row = 0;
+	for(var comp_key in comp_arr)
+	{
+		prg_comp_table = prg_comp_table + "<td>"+comp_arr[comp_key].name+"</td><td><input type=text id=\"prg_"+comp_key+"_c\"></td>";
+		pop_comp_table = pop_comp_table + "<td>"+comp_arr[comp_key].name+"</td><td><div id=\"pop_"+comp_key+"_c\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div></td>";
+		
+		if(new_row) {
+			new_row = 0;
+			prg_comp_table = prg_comp_table + "</tr><tr>";
+			pop_comp_table = pop_comp_table + "</tr><tr>";
+		} else {
+			new_row = 1;
+		}
+	}
+	$("#prg_comp").html(prg_comp_table+"</tr>");
+	$("#pop_comp").html(pop_comp_table+"</tr>");
+	
+	var powder_table = "";
+	for(var powder_key in powder_arr) {
+		powder_table = powder_table + "<tr><td>"+powder_arr[powder_key].name+"</td><td><input type=text id=\""+powder_key+"_p\"></td></tr>";
+	}
+	$("#powder_table").html(powder_table+"</tr>");
+
+	
+	var ore_table = "";
+	for(var ore_key in ore_arr) {
+		ore_table = ore_table + "<tr><td>"+ore_arr[ore_key].name+"</td><td><input type=text id=\""+ore_key+"\"></td></tr>";
+	}
+	
+	$("#ore_table").html(ore_table);
+	
+	var prg_elm_table = "";
+	var pog_elm_table = "";
+	var pop_elm_table = "";
+	for(var elm_key in elm_arr) {
+		prg_elm_table = prg_elm_table + "<tr><td>"+elm_arr[elm_key].name+"</td><td><input type=text id=\"prg_"+elm_key+"\"></td></tr>";
+		pog_elm_table = pog_elm_table + "<tr><td>"+elm_arr[elm_key].name+"</td><td><div id=\"pog_"+elm_key+"\">&nbsp;&nbsp;&nbsp;</div></td></tr>";
+		pop_elm_table = pop_elm_table + "<tr><td>"+elm_arr[elm_key].name+"</td><td><div id=\"pop_"+elm_key+"\">&nbsp;&nbsp;&nbsp;</div></td></tr>";
+	}
+	
+	$("#prg_elm").html(prg_elm_table);
+	$("#pog_elm").html(pog_elm_table);
+	$("#pop_elm").html(pop_elm_table);
+
+	/* load the inventory from the glitch API */
+	access_token = glitch_api_get_access_token();
+	if(access_token) {
+		load_inventory();
+	} else {
+		$("#refresh").hide();
+	}
+	
+	$("#refresh").click(function(e) {
+		load_inventory();
+	});
+	
+	//$("#grinder").submit(function(e) {
+	$( "#grind_button" ).click(function() { 
+		elm_qty = {};
+		for(var elm_key in elm_arr) {
+			elm_qty[elm_key] = get_num("#prg_"+elm_key);
+		}
+	
+		
+		for(var ore_key in ore_arr) {
+			var ore_qty = get_num("#"+ore_key);
+			for(var elm_key in elm_arr) {
+				elm_qty[elm_key] += ore_arr[ore_key][elm_key]*ore_qty;
+			}
+		}
+		
+		for(var elm_key in elm_arr) {
+			$("#pog_"+elm_key).text(elm_qty[elm_key]);
+		}
+		
+	
+		var comp_qty = {};
+		for(var key in comp_arr) {
+			comp_qty[key] = get_num("#prg_"+key+"_c");
+		}
+		
+		for(var powder_key in powder_arr) {
+			var powder_count = get_num("#"+powder_key+"_p");
+			if(powder_count == 0) continue;
+			for(var comp_key in powder_arr[powder_key].comp) {
+				var comp_needed = powder_arr[powder_key].comp[comp_key]*powder_count;
+				if(comp_qty[comp_key] != 0) {
+					if(comp_qty[comp_key] > comp_needed) {
+						comp_qty[comp_key] -= comp_needed;
+						continue;
+					} else {
+						comp_needed -= comp_qty[comp_key];
+						comp_qty[comp_key] = 0;
+					}
+				}
+				for(var elm_key in elm_arr) {
+					elm_qty[elm_key] = elm_qty[elm_key] - comp_arr[comp_key][elm_key] * comp_needed;
+				}
+			}
+			
+		}
+		
+		var issues = "";
+		
+		for(var elm_key in elm_arr) {
+			if(elm_qty[elm_key] < 0) {
+				issues = issues + "<p>Not enough "+elm_arr[elm_key].name+"! You'd need to mine ";
+				var more_ore = [];
+				for(var ore_key in ore_arr) {
+					if(ore_arr[ore_key][elm_key] == 0) continue;
+					var more = Math.ceil(Math.abs(elm_qty[elm_key])/ore_arr[ore_key][elm_key]);
+					more_ore.unshift(more+" "+ore_arr[ore_key].name);
+				}
+				issues = issues + more_ore.join(" OR ");
+			}
+			$("#pop_"+elm_key).text(elm_qty[elm_key]);
+		}
+		
+		
+		for(var comp in comp_arr) {
+			$("#pop_"+comp+"_c").text(comp_qty[comp]);
+		}
+		
+		if(issues == "") {
+			issues = "Everything's OK!";
+		}
+		$("#issues").html(issues);
+		
+		return false; //e.preventDefault();
+		
+	});
+});
+
+</script>
+
+
+</head>
+<body>
+<h1>Grind-O-Tron!</h1>
+<form id=grinder method="post" action="">
+
+<div>
+
+<div class=container>
+
+<div class=left3>
+<h2>What'cha Making?</h2>
+<h3>Powders</h3>
+<table id=powder_table>
+</table>
+</div>
+
+
+<div class=middle3>
+<h2>What'cha Got? <span id=refresh class="icon-box ui-state-default ui-corner-all"><span class="ui-icon ui-icon-refresh"></span></span></h2>
+<h3>Ore</h3>
+<table id=ore_table>
+
+</table>
+
+<h3>Pre-grind Elements</h3>
+<table id=prg_elm>
+</table>
+</div>
+
+<div class=right3>
+<h2>&nbsp;</h2>
+<h3>Current Compounds</h3>
+<table id=prg_comp>
+</table>
+</div>
+<div class=clear>
+<hr><br>
+<a href="#" id="grind_button">Grind! Mix! Alchemize!</a>
+<br><br>
+<hr>
+</div>
+
+</div>
+
+<div class=container>
+<div class=left3>
+<h3 style="width:300px">Mixing Issues</h3>
+<div id=issues>
+None so far!
+</div>
+</div>
+
+<div class=middle3>
+<h3>Post-grind elements</h3>
+<table id=pog_elm>
+
+</table>
+
+<h3>Post-powder elements</h3>
+<table id=pop_elm>
+
+</table>
+</div>
+
+<div class=right3>
+<h3>Leftover Compounds</h3>
+<table id=pop_comp>
+</table>
+</div>
+<div id="pagefooter">
+</div>
+
+</div>
+
+
+</form>
+
+<div id="dialog" title="Please wait...">
+	<p>Please wait while we load your inventory data...</p>
+</div>
+
+</body>
+</html>
